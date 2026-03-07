@@ -8,4 +8,4 @@ __pycache__/
 .vscode/
 .idea/
 *.zip
-scripts\login.py
+scripts/login.py
