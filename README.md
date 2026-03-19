@@ -33,7 +33,7 @@
 
 ## 🖥️ 在线预览
 
-> TODO：部署上线后在此填写访问地址
+> https://www.ilovecsy.top
 
 ---
 
@@ -228,10 +228,8 @@ git push origin feature/你的功能名称
 以下是还没做完的功能，可以在 [Issues](https://github.com/Hhy812/csu-schedule-crawler/issues) 中认领：
 
 - [ ] 接入学校课表系统，实现数据自动爬取，无需手动更新 Excel
-- [ ] 支持按时间段筛选（如"现在空闲"）
 - [ ] 添加收藏/常用教室功能
 - [ ] 支持更多教学楼数据
-- [ ] 深色模式
 - [ ] 性能优化
 
 ### 提交规范
