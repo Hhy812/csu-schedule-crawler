@@ -123,21 +123,15 @@ export function FloorView({
           <div
             className="relative overflow-hidden border border-slate-200 rounded-lg bg-slate-50"
             style={{
-              height: '300px',
-              cursor: 'default'
+              cursor: 'default',
+              aspectRatio: '960 / 280',
             }}
           >
-            <div
-              style={{
-                transform: 'none',
-              }}
-            >
-              <FloorPlanSVG
-                building={building}
-                floor={floor}
-                statuses={statuses}
-              />
-            </div>
+            <FloorPlanSVG
+              building={building}
+              floor={floor}
+              statuses={statuses}
+            />
           </div>
         </CardContent>
       </Card>
