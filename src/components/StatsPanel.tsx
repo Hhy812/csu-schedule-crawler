@@ -6,7 +6,7 @@ import { CheckCircle2, XCircle, Building2, Users } from 'lucide-react';
 interface StatsPanelProps {
   week: number;
   day: string;
-  timeSlot: string;
+  timeSlots: string[];
   classrooms: string[];
 }
 
@@ -20,7 +20,7 @@ interface Stats {
 export function StatsPanel({
   week,
   day,
-  timeSlot,
+  timeSlots,
   classrooms,
 }: StatsPanelProps) {
   const [stats, setStats] = useState<Stats>({ total: 0, free: 0, occupied: 0, freeRate: 0 });
@@ -34,7 +34,10 @@ export function StatsPanel({
         let freeCount = 0;
         classrooms.forEach((classroom) => {
           const classroomData = data.classrooms[classroom];
-          if (classroomData?.schedule?.[week]?.[day]?.[timeSlot] === 'free') {
+          const isFree = timeSlots.every(slot =>
+            classroomData?.schedule?.[week]?.[day]?.[slot] === 'free'
+          );
+          if (isFree) {
             freeCount++;
           }
         });
@@ -46,7 +49,7 @@ export function StatsPanel({
           freeRate: Math.round((freeCount / classrooms.length) * 100),
         });
       });
-  }, [classrooms, week, day, timeSlot]);
+  }, [classrooms, week, day, timeSlots]);
 
   if (classrooms.length === 0) return null;
 

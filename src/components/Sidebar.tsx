@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { Building2, Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -16,12 +17,12 @@ interface SidebarProps {
   selectedFloor: number;
   selectedWeek: number;
   selectedDay: string;
-  selectedTimeSlot: string;
+  selectedTimeSlots: string[];
   onBuildingChange: (building: string) => void;
   onFloorChange: (floor: number) => void;
   onWeekChange: (week: number) => void;
   onDayChange: (day: string) => void;
-  onTimeSlotChange: (timeSlot: string) => void;
+  onTimeSlotsChange: (timeSlots: string[]) => void;
 }
 
 export function Sidebar({
@@ -30,22 +31,45 @@ export function Sidebar({
   selectedFloor,
   selectedWeek,
   selectedDay,
-  selectedTimeSlot,
+  selectedTimeSlots,
   onBuildingChange,
   onFloorChange,
   onWeekChange,
   onDayChange,
-  onTimeSlotChange,
+  onTimeSlotsChange,
 }: SidebarProps) {
+  const [visitorCount, setVisitorCount] = useState<number | null>(null);
+  const [visitorError, setVisitorError] = useState(false);
+
+  useEffect(() => {
+    // 调用后端接口记录访问并返回累计次数（写入文件）
+    fetch('/api/visit', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ path: window.location.pathname }),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        if (typeof data.count === 'number') {
+          setVisitorCount(data.count);
+        } else {
+          setVisitorError(true);
+        }
+      })
+      .catch(() => {
+        setVisitorError(true);
+      });
+  }, []);
+
   const buildingList = ['A', 'B', 'C', 'D'];
   const floors = buildings[selectedBuilding]
     ? Object.keys(buildings[selectedBuilding]).map(Number).sort((a, b) => a - b)
     : [];
 
   return (
-    <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg">
+    <aside className="w-80 bg-white border-r border-slate-200 flex flex-col shadow-lg h-full">
       {/* Logo Area */}
-      <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-teal-600">
+      <div className="p-6 border-b border-slate-200 bg-gradient-to-r from-emerald-600 to-teal-600 flex-shrink-0">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
             <Building2 className="w-6 h-6 text-white" />
@@ -57,7 +81,7 @@ export function Sidebar({
         </div>
       </div>
 
-      <ScrollArea className="flex-1">
+      <ScrollArea className="flex-1 min-h-0">
         <div className="p-4 space-y-6">
           {/* Building Selection */}
           <div className="space-y-3">
@@ -71,17 +95,17 @@ export function Sidebar({
                   key={building}
                   variant={selectedBuilding === building ? 'default' : 'outline'}
                   className={`h-12 text-lg font-bold ${selectedBuilding === building
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                    : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                     }`}
                   onClick={() => {
                     onBuildingChange(building);
                     // Reset to first available floor
-                    const availableFloors = buildings[building]
+                    const availableFloors = buildings[building]// 算出这个楼栋有哪些楼层
                       ? Object.keys(buildings[building]).map(Number).sort((a, b) => a - b)
                       : [];
                     if (availableFloors.length > 0) {
-                      onFloorChange(availableFloors[0]);
+                      onFloorChange(availableFloors[0]);// 自动跳到第一层
                     }
                   }}
                 >
@@ -106,10 +130,10 @@ export function Sidebar({
                     variant={selectedFloor === floor ? 'default' : 'outline'}
                     disabled={!isAvailable}
                     className={`h-10 ${selectedFloor === floor
-                        ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                        : isAvailable
-                          ? 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
-                          : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                      : isAvailable
+                        ? 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
                       }`}
                     onClick={() => onFloorChange(floor)}
                   >
@@ -156,8 +180,8 @@ export function Sidebar({
                   variant={selectedDay === day ? 'default' : 'outline'}
                   size="sm"
                   className={`text-xs ${selectedDay === day
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                    : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                     }`}
                   onClick={() => onDayChange(day)}
                 >
@@ -171,18 +195,26 @@ export function Sidebar({
           <div className="space-y-3">
             <label className="text-sm font-semibold text-slate-700 flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              选择节次
+              选择节次（可多选）
             </label>
             <div className="space-y-2">
               {TIME_SLOTS.map((timeSlot) => (
                 <Button
                   key={timeSlot}
-                  variant={selectedTimeSlot === timeSlot ? 'default' : 'outline'}
-                  className={`w-full justify-start ${selectedTimeSlot === timeSlot
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                  variant={selectedTimeSlots.includes(timeSlot) ? 'default' : 'outline'}
+                  className={`w-full justify-start ${selectedTimeSlots.includes(timeSlot)
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                    : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
                     }`}
-                  onClick={() => onTimeSlotChange(timeSlot)}
+                  onClick={() => {
+                    if (selectedTimeSlots.includes(timeSlot)) {
+                      // Remove if already selected
+                      onTimeSlotsChange(selectedTimeSlots.filter(t => t !== timeSlot));
+                    } else {
+                      // Add if not selected
+                      onTimeSlotsChange([...selectedTimeSlots, timeSlot]);
+                    }
+                  }}
                 >
                   {timeSlot}
                 </Button>
@@ -206,6 +238,28 @@ export function Sidebar({
           <div className="flex items-center gap-1">
             <div className="w-3 h-3 rounded bg-slate-300"></div>
             <span>无数据</span>
+          </div>
+        </div>
+
+        <div className="mt-4 border-t border-slate-200 pt-3 text-xs text-slate-500 space-y-1">
+          <div>
+            访问次数：
+            <span className="font-medium text-slate-700">
+              {visitorError
+                ? '后端未启动'
+                : visitorCount === null
+                  ? '加载中…'
+                  : visitorCount}
+            </span>
+          </div>
+          <div className="text-xs leading-tight">
+            联系方式：
+            <a
+              href="mailto:your@email.com"
+              className="text-emerald-600 hover:underline block sm:inline"
+            >
+              Breakvex@gmail.com
+            </a>
           </div>
         </div>
       </div>

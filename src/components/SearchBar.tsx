@@ -15,7 +15,7 @@ import { toast } from 'sonner';
 interface SearchBarProps {
   selectedWeek: number;
   selectedDay: string;
-  selectedTimeSlot: string;
+  selectedTimeSlots: string[];
 }
 
 interface SearchResult {
@@ -28,10 +28,11 @@ interface SearchResult {
 export function SearchBar({
   selectedWeek,
   selectedDay,
-  selectedTimeSlot,
+  selectedTimeSlots,
 }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<SearchResult[]>([]);
+  const [searchPerformed, setSearchPerformed] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
   const handleSearch = async () => {
@@ -51,7 +52,9 @@ export function SearchBar({
       // Find matching classrooms
       Object.entries(data.classrooms).forEach(([classroom, info]: [string, any]) => {
         if (classroom.includes(query)) {
-          const isFree = info.schedule?.[selectedWeek]?.[selectedDay]?.[selectedTimeSlot] === 'free';
+          const isFree = selectedTimeSlots.every(slot =>
+            info.schedule?.[selectedWeek]?.[selectedDay]?.[slot] === 'free'
+          );
           results.push({
             classroom,
             building: info.building,
@@ -62,11 +65,10 @@ export function SearchBar({
       });
 
       setSearchResults(results);
-      if (results.length === 0) {
-        toast.info('未找到匹配的教室');
-      }
+      setSearchPerformed(true);
     } catch (error) {
       toast.error('搜索失败，请重试');
+      setSearchPerformed(true);
     }
   };
 
@@ -114,7 +116,7 @@ export function SearchBar({
           </div>
 
           {/* Search Context */}
-          <div className="flex items-center gap-2 text-sm text-slate-500">
+          <div className="flex items-center gap-2 text-sm text-slate-500 flex-wrap">
             <span>查询条件:</span>
             <Badge variant="outline" className="text-xs">
               第{selectedWeek}周
@@ -123,43 +125,52 @@ export function SearchBar({
               {selectedDay}
             </Badge>
             <Badge variant="outline" className="text-xs">
-              {selectedTimeSlot}
+              {selectedTimeSlots.join('/')}
             </Badge>
           </div>
+
+          {/* No results notice */}
+          {searchPerformed && searchResults.length === 0 && (
+            <div className="rounded-lg border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">
+              未找到匹配的教室，请检查输入是否正确或更换查询条件。
+            </div>
+          )}
 
           {/* Search Results */}
           {searchResults.length > 0 && (
             <div className="border rounded-lg overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-slate-50">
-                  <tr>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">教室号</th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">位置</th>
-                    <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">状态</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y">
-                  {searchResults.map((result) => (
-                    <tr key={result.classroom} className="hover:bg-slate-50">
-                      <td className="px-4 py-3 font-medium">{result.classroom}</td>
-                      <td className="px-4 py-3 text-slate-600">
-                        {result.building}座 {result.floor}楼
-                      </td>
-                      <td className="px-4 py-3">
-                        <Badge
-                          className={
-                            result.status === 'free'
-                              ? 'bg-emerald-500 text-white'
-                              : 'bg-rose-500 text-white'
-                          }
-                        >
-                          {result.status === 'free' ? '空闲' : '占用'}
-                        </Badge>
-                      </td>
+              <div className="max-h-64 overflow-y-auto">
+                <table className="w-full">
+                  <thead className="bg-slate-50 sticky top-0 bg-white">
+                    <tr>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">教室号</th>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">位置</th>
+                      <th className="px-4 py-2 text-left text-sm font-medium text-slate-700">状态</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y">
+                    {searchResults.map((result) => (
+                      <tr key={result.classroom} className="hover:bg-slate-50">
+                        <td className="px-4 py-3 font-medium">{result.classroom}</td>
+                        <td className="px-4 py-3 text-slate-600">
+                          {result.building}座 {result.floor}楼
+                        </td>
+                        <td className="px-4 py-3">
+                          <Badge
+                            className={
+                              result.status === 'free'
+                                ? 'bg-emerald-500 text-white'
+                                : 'bg-rose-500 text-white'
+                            }
+                          >
+                            {result.status === 'free' ? '空闲' : '占用'}
+                          </Badge>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
