@@ -34,6 +34,15 @@ function App() {
 
       .then(data => {
         setBuildings(data.buildings);  // 把楼栋数据存入状态
+        // Set default building and floor
+        const buildingKeys = Object.keys(data.buildings).sort();
+        if (buildingKeys.length > 0) {
+          setSelectedBuilding(buildingKeys[0]);
+          const floors = Object.keys(data.buildings[buildingKeys[0]]).map(Number).sort((a, b) => a - b);
+          if (floors.length > 0) {
+            setSelectedFloor(floors[0]);
+          }
+        }
         setLoading(false);             // 数据加载完了，关闭 loading
       })
 

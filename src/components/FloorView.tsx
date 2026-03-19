@@ -2,8 +2,7 @@ import { useState, useEffect } from 'react';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle2, XCircle, HelpCircle, MapPin, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { CheckCircle2, XCircle, HelpCircle, MapPin } from 'lucide-react';
 import { FloorPlanSVG } from './FloorPlanSVG';
 
 interface FloorViewProps {
@@ -29,10 +28,6 @@ export function FloorView({
 }: FloorViewProps) {
   const [statuses, setStatuses] = useState<ClassroomStatus>({});
   const [loading, setLoading] = useState(true);
-  const [zoom, setZoom] = useState(1);
-  const [pan, setPan] = useState({ x: 0, y: 0 });
-  const [isDragging, setIsDragging] = useState(false);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
     // Load classroom data and check status
@@ -55,36 +50,6 @@ export function FloorView({
         setLoading(false);
       });
   }, [classrooms, week, day, timeSlots]);
-
-  const handleZoomIn = () => setZoom(prev => Math.min(prev * 1.2, 3));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev / 1.2, 0.5));
-  const handleReset = () => {
-    setZoom(1);
-    setPan({ x: 0, y: 0 });
-  };
-
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsDragging(true);
-    setDragStart({ x: e.clientX - pan.x, y: e.clientY - pan.y });
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging) return;
-    setPan({
-      x: e.clientX - dragStart.x,
-      y: e.clientY - dragStart.y,
-    });
-  };
-
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
-
-  const handleWheel = (e: React.WheelEvent) => {
-    e.preventDefault();
-    const delta = e.deltaY > 0 ? 0.9 : 1.1;
-    setZoom(prev => Math.max(0.5, Math.min(3, prev * delta)));
-  };
 
   const handleClassroomClick = (classroom: string) => {
     const status = statuses[classroom];
@@ -126,9 +91,6 @@ export function FloorView({
     );
   }
 
-  // Check if zoom controls should be shown
-  const shouldShowZoomControls = !(building === 'A' && floor === 3);
-
   // Calculate stats
   const freeCount = Object.values(statuses).filter(s => s === 'free').length;
   const occupiedCount = Object.values(statuses).filter(s => s === 'occupied').length;
@@ -157,52 +119,17 @@ export function FloorView({
 
       {/* SVG Floor Plan */}
       <Card className="w-full bg-white border-slate-200 shadow-lg overflow-hidden">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <MapPin className="w-6 h-6 text-emerald-500" />
-              <h2 className="text-xl font-bold text-slate-800">
-                {building}座 {floor}楼 教室分布图
-              </h2>
-            </div>
-            <div className="flex items-center gap-2">
-              {shouldShowZoomControls && (
-                <>
-                  <Button variant="outline" size="sm" onClick={handleZoomOut}>
-                    <ZoomOut className="w-4 h-4" />
-                  </Button>
-                  <span className="text-sm text-slate-600 min-w-[60px] text-center">
-                    {Math.round(zoom * 100)}%
-                  </span>
-                  <Button variant="outline" size="sm" onClick={handleZoomIn}>
-                    <ZoomIn className="w-4 h-4" />
-                  </Button>
-                  <Button variant="outline" size="sm" onClick={handleReset}>
-                    <RotateCcw className="w-4 h-4" />
-                  </Button>
-                </>
-              )}
-            </div>
-          </div>
-        </CardHeader>
         <CardContent className="p-6">
           <div
             className="relative overflow-hidden border border-slate-200 rounded-lg bg-slate-50"
             style={{
-              height: '400px',
-              cursor: shouldShowZoomControls ? (isDragging ? 'grabbing' : 'grab') : 'default'
+              height: '300px',
+              cursor: 'default'
             }}
-            onMouseDown={shouldShowZoomControls ? handleMouseDown : undefined}
-            onMouseMove={shouldShowZoomControls ? handleMouseMove : undefined}
-            onMouseUp={shouldShowZoomControls ? handleMouseUp : undefined}
-            onMouseLeave={shouldShowZoomControls ? handleMouseUp : undefined}
-            onWheel={shouldShowZoomControls ? handleWheel : undefined}
           >
             <div
               style={{
-                transform: shouldShowZoomControls ? `translate(${pan.x}px, ${pan.y}px) scale(${zoom})` : 'none',
-                transformOrigin: 'center center',
-                transition: isDragging ? 'none' : 'transform 0.1s ease-out',
+                transform: 'none',
               }}
             >
               <FloorPlanSVG

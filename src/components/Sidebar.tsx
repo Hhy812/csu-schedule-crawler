@@ -61,7 +61,7 @@ export function Sidebar({
       });
   }, []);
 
-  const buildingList = ['A', 'B', 'C', 'D'];
+  const buildingList = Object.keys(buildings).sort();
   const floors = buildings[selectedBuilding]
     ? Object.keys(buildings[selectedBuilding]).map(Number).sort((a, b) => a - b)
     : [];
@@ -89,30 +89,27 @@ export function Sidebar({
               <Building2 className="w-4 h-4" />
               选择教学楼
             </label>
-            <div className="grid grid-cols-4 gap-2">
-              {buildingList.map((building) => (
-                <Button
-                  key={building}
-                  variant={selectedBuilding === building ? 'default' : 'outline'}
-                  className={`h-12 text-lg font-bold ${selectedBuilding === building
-                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                    : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
-                    }`}
-                  onClick={() => {
-                    onBuildingChange(building);
-                    // Reset to first available floor
-                    const availableFloors = buildings[building]// 算出这个楼栋有哪些楼层
-                      ? Object.keys(buildings[building]).map(Number).sort((a, b) => a - b)
-                      : [];
-                    if (availableFloors.length > 0) {
-                      onFloorChange(availableFloors[0]);// 自动跳到第一层
-                    }
-                  }}
-                >
-                  {building}座
-                </Button>
-              ))}
-            </div>
+            <Select value={selectedBuilding} onValueChange={(value) => {
+              onBuildingChange(value);
+              // Reset to first available floor
+              const availableFloors = buildings[value]
+                ? Object.keys(buildings[value]).map(Number).sort((a, b) => a - b)
+                : [];
+              if (availableFloors.length > 0) {
+                onFloorChange(availableFloors[0]);
+              }
+            }}>
+              <SelectTrigger className="w-full border-slate-200 focus:ring-emerald-500">
+                <SelectValue placeholder="选择教学楼" />
+              </SelectTrigger>
+              <SelectContent>
+                {buildingList.map((building) => (
+                  <SelectItem key={building} value={building}>
+                    {building}座
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           {/* Floor Selection */}
@@ -121,26 +118,20 @@ export function Sidebar({
               <Building2 className="w-4 h-4" />
               选择楼层
             </label>
-            <div className="grid grid-cols-5 gap-2">
-              {[1, 2, 3, 4, 5].map((floor) => {
-                const isAvailable = floors.includes(floor);
-                return (
-                  <Button
-                    key={floor}
-                    variant={selectedFloor === floor ? 'default' : 'outline'}
-                    disabled={!isAvailable}
-                    className={`h-10 ${selectedFloor === floor
-                      ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
-                      : isAvailable
-                        ? 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
-                        : 'bg-slate-100 text-slate-400 cursor-not-allowed'
-                      }`}
-                    onClick={() => onFloorChange(floor)}
-                  >
-                    {floor}F
-                  </Button>
-                );
-              })}
+            <div className="flex flex-wrap gap-2">
+              {floors.map((floor) => (
+                <Button
+                  key={floor}
+                  variant={selectedFloor === floor ? 'default' : 'outline'}
+                  className={`h-10 ${selectedFloor === floor
+                    ? 'bg-emerald-500 hover:bg-emerald-600 text-white'
+                    : 'border-slate-200 hover:border-emerald-300 hover:text-emerald-600'
+                    }`}
+                  onClick={() => onFloorChange(floor)}
+                >
+                  {floor}F
+                </Button>
+              ))}
             </div>
           </div>
 
