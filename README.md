@@ -33,7 +33,7 @@
 
 ## 🖥️ 在线预览
 
-> https://www.ilovecsy.top
+> https://www.ilovecsu.top
 
 ---
 
